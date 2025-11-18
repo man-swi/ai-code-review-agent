@@ -1,0 +1,1484 @@
+{
+  "name": "Github code review",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "617eb2c5-dd4b-4e28-b533-0c32ea6ca961",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              },
+              "leftValue": "={{$json.comment}}",
+              "rightValue": "coro-bot-review"
+            },
+            {
+              "id": "48a5d63a-3f09-46c4-9552-2d0436014b14",
+              "leftValue": "={{JSON.stringify($('Listen For Github Comments').item.json.body.issue.pull_request)}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f6d79ebc-6fff-4aef-a547-a976eb3a8e80",
+      "name": "Need Review",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -1568,
+        192
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c6e1430b-84a7-47ce-8fe9-7b94da0f2d31",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.status }}",
+              "rightValue": ""
+            },
+            {
+              "id": "bf6e9eb9-d72d-459c-a722-9614bab8842c",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.status }}",
+              "rightValue": ""
+            },
+            {
+              "id": "03200577-a262-4f46-ad25-9c15b0c8146d",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              },
+              "leftValue": "={{ $json.patch }}",
+              "rightValue": "@@"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "737d7ccd-aa4d-4f89-9a10-68cb4a3564bb",
+      "name": "Skip File Changes",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        352,
+        432
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=A developer has left the following comment on a code change:\n{{ $('Edit Fields').item.json.comment }}\nThis comment is related to the following code change:\nAssociated JIRA Ticket Context:\n{{ $json.jiraParentContext || $json.jiraContext || 'No JIRA context was provided.' }}\nFile Path: {{ $('Skip File Changes').item.json.filename }}\ncode\nOriginal code\n{{ $json.originalCode }}\nchanged to\ncode\nNew code\n{{ $json.newCode }}\nBased on the user's comment, please review the code and provide a helpful response.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an automated AI code review assistant. Your primary goal is to help developers by reviewing code and answering their specific questions.\n\n**Instructions:**\n\n1.  **Analyze the User's Comment:** First and foremost, read the user's comment to understand their specific question or request. This is your primary context.\n2.  **Review the Code:** Analyze the provided code changes in the context of the user's request.\n3.  **Provide a Direct Answer:** Formulate a helpful, direct response that answers the user's question or addresses their comment.\n4.  **General Review (If a specific question isn't asked):** If the user provides a generic comment like \"review this\" or \"any issues?\", then perform a general review focusing on business logic, correctness, security, and performance.\n5.  **Output Format:**\n    *   If you find specific issues in the code, begin your response with the prefix `🤖 **AI Review:**`.\n    *   If the user's request is a question and you are providing an answer, you can respond in a more conversational tone.\n    *   If you perform a general review and find **zero** issues, your **ENTIRE** response must be the single keyword: `ALL_CLEAR`."
+            }
+          ]
+        }
+      },
+      "id": "e4844bab-c270-4081-93a0-e42a6ed73721",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1024,
+        112
+      ],
+      "typeVersion": 1.5
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "temperature": 0,
+          "topK": 1
+        }
+      },
+      "id": "4e29277a-7930-4e67-baba-eee0d925f77b",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1104,
+        336
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "xpCUuliz9pmCB61V",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the MR description from the previous node's input\nconst description = $input.first().json.description;\n// Regex to find a JIRA issue key (e.g., PROJ-123).\nconst jiraRegex = /\\b([A-Z]+-\\d+)\\b/; // Safely try to find a match ONLY if the description is a string\nconst match = (typeof description === 'string') ? description.match(jiraRegex) : null;\n// If a key is found, return it.\nif (match && match[0]) { // We name the output 'jiraIssueKey' for clarity.\n  return [{\n    json: {\n      jiraIssueKey: match[0]\n    }\n  }];\n} else {\n  //If no key is found or description is null, return an empty array to stop thispath gracefully.\n  return [];\n}"
+      },
+      "id": "b05e4d4d-1b99-4e6c-8b13-9b3e016384d8",
+      "name": "Extract the JIRA Issue ID",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -992,
+        288
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "issueKey": "={{ $json.jiraIssueKey }}",
+        "additionalFields": {}
+      },
+      "id": "43f199cc-41b0-4e3f-9105-cb9673429724",
+      "name": "Get JIRA issue",
+      "type": "n8n-nodes-base.jira",
+      "position": [
+        -768,
+        288
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "qvqhYy6k7lOE8TOx",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "59f4091a-0260-4f24-aa8d-c211f7c243e2",
+              "name": "jiraContext",
+              "type": "string",
+              "value": "=JIRA Ticket Context: \nTitle: {{ $json.fields.summary }} \nType: {{ $json.fields.issuetype.name }} \nDescription: {{ $json.fields.description }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7231ff0a-1845-4b08-a341-878dd8765317",
+      "name": "Format JIRA Context",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -96,
+        384
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "5338bc5b-9f30-4b66-b6a2-5b85dc012765",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.fields.parent }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f48acd5-83ae-4955-ac86-c4acdba7b038",
+      "name": "If JIRA Subtask",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -544,
+        192
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "59f4091a-0260-4f24-aa8d-c211f7c243e2",
+              "name": "jiraParentContext",
+              "type": "string",
+              "value": "=JIRA Parent Ticket Context: \nTitle: {{ $json.fields.summary }} \nType: {{ $json.fields.issuetype.name }} \nDescription: {{ $json.fields.description }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5b61af92-0efb-4323-a8d0-6fe47f40edad",
+      "name": "Format JIRA Parent Context",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -96,
+        192
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 4,
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "id": "6d700108-64d2-4d07-a52f-506e5d301305",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        128,
+        400
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nvar diff = $input.item.json.gitDiff\n\nlet lines = diff.trimEnd().split('\\n');\n\nlet originalCode = '';\nlet newCode = '';\n\nlines.forEach(line => {\n  console.log(line)\n    if (line.startsWith('-')) {\n        originalCode += line + \"\\n\";\n    } else if (line.startsWith('+')) {\n        newCode += line + \"\\n\";\n    } else {\n        originalCode += line + \"\\n\";\n        newCode += line + \"\\n\";\n    }\n});\n\nreturn { ...$json, originalCode, newCode };\n\n"
+      },
+      "id": "37135a28-88bc-4e47-aa3f-ab4f4030d7fa",
+      "name": "Prepare Code Changes",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        800,
+        432
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {},
+      "id": "be4b34d5-b474-4317-b8a5-0442fceccb92",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "position": [
+        2720,
+        704
+      ],
+      "executeOnce": false,
+      "retryOnFail": false,
+      "typeVersion": 1,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "d57c7747-21f3-4658-81d2-d9d29b547dcf",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        1600,
+        432
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "id": "52cd680a-0f98-4b3d-a139-838537eaac0a",
+      "name": "Merge LLM Output with Input",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1376,
+        432
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a47cb4d9-7a3b-473e-bc7b-5f8d6c073a14",
+              "name": "filename",
+              "value": "={{$json.filename}}",
+              "type": "string"
+            },
+            {
+              "id": "f200df00-74e2-49e1-90c0-b722f62d4c1f",
+              "name": "status",
+              "value": "={{$json.status}}",
+              "type": "string"
+            },
+            {
+              "id": "b8c9dc36-5ec7-45cb-8d1a-cb20cb4b2667",
+              "name": "additions",
+              "value": "={{$json.additions}}",
+              "type": "string"
+            },
+            {
+              "id": "a60de822-571c-457a-9887-52cb836522a4",
+              "name": "patch",
+              "value": "={{$json.patch}}",
+              "type": "string"
+            },
+            {
+              "id": "24955541-bf58-4d4b-be6f-49af7896b80d",
+              "name": "lastNewLine",
+              "value": "={{$json.lastNewLine}}",
+              "type": "string"
+            },
+            {
+              "id": "f132475b-5ae4-4b7f-8ea0-4d701ba11675",
+              "name": "lastOldLine",
+              "value": "={{$json.lastOldLine}}",
+              "type": "string"
+            },
+            {
+              "id": "1c399030-c314-44a8-b61e-46f66d8e72f8",
+              "name": "prNumber",
+              "value": "={{ $('Edit Fields').item.json.prNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "da990780-4026-4a20-ab70-5a0e0e837045",
+              "name": "repo",
+              "value": "={{ $('Edit Fields').item.json.repo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c30bfcb6-c9fe-4896-92b5-12efca3d82e2",
+      "name": "Filter Irrelevant Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1088,
+        512
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "70dd215a-813b-4bcf-9fa6-db4581ccad77",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.noIssuesFound }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7da909ba-9982-4112-88ab-6c6724b26772",
+      "name": "Any Issues Found?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        2048,
+        432
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "commentsToPost",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "iid,project_id,diff_refs",
+        "options": {
+          "includeBinary": true
+        }
+      },
+      "id": "cd5150c5-dfcb-40df-be18-6e34b8ccdca6",
+      "name": "Split Out Comments",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        2272,
+        464
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst postData = item.commentsToPost || item;\n\n// Prepare the inline comment list\nconst comments = [];\n\nif (postData.text && postData.filename && postData.lastNewLine) {\n  comments.push({\n    path: postData.filename,\n    position: parseInt(postData.lastNewLine, 10),\n    body: postData.text,\n  });\n}\n\n// Build the full GitHub review body\nconst requestBody = {\n  body: \"🤖 **AI Review:** Automated review findings below.\",\n  event: \"COMMENT\",\n  comments: comments,\n  repo: postData.repo,\n  prNumber: postData.prNumber,\n  owner: postData.owner,\n};\n\n// Attach for the next node\nitem.requestBody = requestBody;\nreturn item;\n"
+      },
+      "id": "9aa79fc6-7468-45ee-a490-83c733b9e4e3",
+      "name": "Prepare Request",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2496,
+        464
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\n// Reference the nested 'commentsToPost' object\nconst postData = item.commentsToPost;\n\n// Build the final request body with the nested 'position' key\nconst requestBody = {\n  body: postData.text,\n};\n\n// Attach the final body for the next node\nitem.requestBody = requestBody;\n\nreturn item;"
+      },
+      "id": "576e4d7f-c57e-4105-97e4-f892805944c7",
+      "name": "Prepare Request Without Position",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2944,
+        384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.github.com/repos/' + $json.owner + '/' + $json.repo + '/issues/' + $json.prNumber + '/comments' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "🤖 AI code review initiated. This may take up to 30 minutes for large merge requests. I'll post my findings as comments on the relevant files."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1af84e05-53fb-440a-826d-ab2367ca3996",
+      "name": "Post Review Started",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -992,
+        96
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "AppdokjFf6NCol2o",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// This function is designed to parse a git diff/patch\n// and find the line number of the last change.\nconst parseLastDiff = (gitDiff) => {\n  // Clean up the diff string\n  gitDiff = gitDiff.replace(/\\n\\\\ No newline at end of file/, '');\n  \n  const diffList = gitDiff.trimEnd().split('\\n').reverse();\n  const lastLineFirstChar = diffList?.[0]?.[0];\n  \n  // Find the last @@ line in the diff\n  const lastDiff = diffList.find((item) => {\n      return /^@@ \\-\\d+(,\\d+)? \\+\\d+(,\\d+)? @@/g.test(item);\n    }) || '';\n\n  // Extract the line counts from the @@ line\n  const match = lastDiff.match(/^@@ \\-\\d+(?:,(\\d+))? \\+(\\d+)(?:,(\\d+))? @@/);\n  if (!match) {\n    return { lastOldLine: -1, lastNewLine: -1, gitDiff };\n  }\n  \n  const oldLineStart = parseInt(match[1] || '1', 10);\n  const newLineStart = parseInt(match[2] || '1', 10);\n  const newLineCount = parseInt(match[3] || '1', 10);\n\n  const lastOldLine = oldLineStart -1 + (parseInt(match[1] || '1', 10));\n  const lastNewLine = newLineStart -1 + newLineCount;\n\n  return {\n    lastOldLine: lastLineFirstChar === '+' ? null : lastOldLine,\n    lastNewLine: lastLineFirstChar === '-' ? null : lastNewLine,\n    gitDiff: gitDiff, // Pass the cleaned gitDiff through\n  };\n};\n\n// --- Main execution ---\nconst item = $input.item.json;\n\n// GitHub provides the diff in the 'patch' field.\n// Only run if the patch field exists.\nif (item.patch) {\n  const extra = parseLastDiff(item.patch);\n  return { ...item, ...extra };\n} else {\n  // If there's no patch, return default values to avoid errors.\n  return { \n    ...item, \n    lastOldLine: -1, \n    lastNewLine: -1, \n    gitDiff: '' \n  };\n}"
+      },
+      "id": "b19bfcb5-374f-4d0e-951b-218b2e7846a5",
+      "name": "Parse Diff",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        576,
+        432
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.github.com/repos/' + $('Edit Fields').item.json.owner + '/' + $('Edit Fields').item.json.repo + '/issues/' + $('Edit Fields').item.json.prNumber + '/comments' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "🤖 AI review complete. No significant issues were found. LGTM!"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dbf565df-498f-4f44-a983-58e23e3df671",
+      "name": "Post No Issues Found",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3168,
+        192
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "AppdokjFf6NCol2o",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.github.com/repos/' + $('Edit Fields').item.json.owner + '/' + $('Edit Fields').item.json.repo + '/issues/' + $('Edit Fields').item.json.prNumber + '/comments' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "=🤖 An error occurred during the code review: {{ $json.error }}. Please trigger the review again."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eded2ee1-508f-4e07-9658-4daef47ddf26",
+      "name": "Post Error Occurred",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3168,
+        704
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "AppdokjFf6NCol2o",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflowStaticData = $getWorkflowStaticData('global');\nconst executionId = $input.first().json.execution.id;\nconst errorMessage = $input.first().json.execution.error.message;\n\nreturn {...workflowStaticData[executionId], error: errorMessage};"
+      },
+      "id": "17fae244-9bb1-4eda-8968-217283b07e1b",
+      "name": "Get Static Context Including Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2944,
+        704
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflowStaticData = $getWorkflowStaticData('global');\nconst executionId = $execution.id;\nreturn [\n  {\n    json: workflowStaticData[executionId] || {}\n  }\n];\n"
+      },
+      "id": "c4a7c84d-14fd-41a4-a6c1-5be1b77c971b",
+      "name": "Get Static Context",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2944,
+        192
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflowStaticData = $getWorkflowStaticData('global');\nconst executionId = $execution.id;\ndelete workflowStaticData[executionId];\nreturn [];"
+      },
+      "id": "3d990bc8-75e1-48a5-8393-9ed0f617fd25",
+      "name": "Cleanup Static Context",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3392,
+        528
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.first().json.data;\n\n// Filter for items that have actual review text\nconst commentsToPost = allItems.filter(item => {\n  const text = item.text || '';\n  const isNotEmpty = text.trim() !== '';\n  const isNotClear = !text.includes('ALL_CLEAR');\n  const isNotNoFindings = !text.toLowerCase().includes('no findings');\n  const isNotNoIssues = !text.toLowerCase().includes('no issues found');\n  return isNotEmpty && isNotClear && isNotNoFindings && isNotNoIssues;\n});\n\nreturn [{\n  json: {\n    commentsToPost: commentsToPost,\n    noIssuesFound: commentsToPost.length === 0\n  }\n}];"
+      },
+      "id": "a7ec8cb5-2b1d-44cc-8eb2-1a2f0361abcf",
+      "name": "Process Comments",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1824,
+        432
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "### ⭐️ Try It Out!\n\nWelcome! This template adds AI-powered code reviews to your GitLab Merge Requests. Simply comment **`ai-review`** on any MR and watch the workflow:\n\n- Captures the comment event.\n- Fetches diff & optional JIRA context.\n- Asks an LLM for insights.\n- Posts inline comments or an 'all clear' note.\n\nPerfect for catching logic, security and performance issues fast.",
+        "height": 288,
+        "width": 640,
+        "color": 6
+      },
+      "id": "7dd44533-33b9-46e0-90a5-02028e6d9166",
+      "name": "Try It Out!",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3024,
+        64
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 🟢 Step 1: Listen & Capture\n\nA Webhook node listens for merge request note events. When the comment text matches your trigger (default: `ai-review`), it:\n\n- Extracts the Project & MR IDs and stores them in a **Static Context** (see below) so later nodes always know where to post results.\n- Posts a short \"AI review started\" message back to the MR to let reviewers know the bot is working.",
+        "height": 232,
+        "width": 600,
+        "color": 2
+      },
+      "id": "658663b5-9404-4801-ac78-9496b1a89b20",
+      "name": "Step 1: Listen & Capture",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2240,
+        480
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 🟣 Step 2: Prepare & Review\n\nThe workflow fetches the merge request changes via the GitLab API and parses the diff into original vs new code blocks.\n\nIf the MR description contains a Jira key, the workflow fetches the issue summary and, if it's a subtask, also fetches the parent ticket for extra context. Both summaries are combined into the prompt.\n\nAn LLM (Gemini by default) is prompted to find critical issues only—logic bugs, security flaws and performance problems—and to return comments with file and line numbers. If no issues exist, the model returns `ALL_CLEAR`.",
+        "height": 280,
+        "width": 600,
+        "color": 4
+      },
+      "id": "427e509d-d1fe-4111-a90e-d6add6eedcc9",
+      "name": "Step 2: Prepare & Review",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -192,
+        -48
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 🟠 Step 3: Post & Fallback\n\nReview comments are converted into GitLab discussion payloads and posted back to the MR at the correct file and line positions.\n\nIf a comment’s position is not calculated properly, the workflow falls back to posting a comment as a thread at the MR level so nothing is lost.",
+        "height": 184,
+        "width": 600,
+        "color": 5
+      },
+      "id": "c13d76fa-29a5-4e42-9cd8-f8fe3a61ba43",
+      "name": "Step 3: Post & Fallback",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3616,
+        -32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 🔵 Static Context & Error Handling\n\nWorkflow Static Data is used to store persistent values—like the project ID and the MR ID so that they will be available across branches.\n\nThis is critical for the Error Trigger: if something fails, the error path can still post to the correct MR using these stored IDs. Without static context, error comments wouldn’t know where to go.",
+        "height": 216,
+        "width": 600
+      },
+      "id": "0040cc97-eef4-40bc-9ae4-2655ee3f8332",
+      "name": "Static Context & Error Handling",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2144,
+        912
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 🟡 Need Help & Customise\n\n- Change the trigger word in the **IF** node to match your own.\n- Swap in your preferred LLM or adjust the prompt to suit your guidelines.\n- Filter by file type or exclude certain directories in the parsing logic.",
+        "height": 184,
+        "width": 552,
+        "color": 7
+      },
+      "id": "b8db0dc2-fbd9-4e1b-9d9c-829eee796c52",
+      "name": "Need Help & Customise",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        784,
+        736
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "issueKey": "={{ $json.fields.parent.key }}",
+        "additionalFields": {}
+      },
+      "id": "ab5302fa-8ce9-46a9-bade-d356b59d148c",
+      "name": "Get JIRA Parent Issue",
+      "type": "n8n-nodes-base.jira",
+      "position": [
+        -320,
+        192
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "qvqhYy6k7lOE8TOx",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8ad34287-5ebe-4af9-b65c-5193482898d0",
+              "name": "owner",
+              "value": "={{$json.body.repository.owner.login}}",
+              "type": "string"
+            },
+            {
+              "id": "baec1beb-1301-4887-bef8-a0f3871ec4fa",
+              "name": "repo",
+              "value": "={{$json.body.repository.name}}",
+              "type": "string"
+            },
+            {
+              "id": "8f786839-ae38-4c73-a94c-35d934e1507b",
+              "name": "prNumber",
+              "value": "={{$json.body.issue.number}}",
+              "type": "string"
+            },
+            {
+              "id": "261f5100-bee1-4877-accc-39bd024c03ea",
+              "name": "description",
+              "value": "={{$json.body.issue.body}}",
+              "type": "string"
+            },
+            {
+              "id": "77d2f00b-c9cf-419e-9175-c7177f6ac786",
+              "name": "comment",
+              "value": "={{$json.body.comment.body}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1664,
+        368
+      ],
+      "id": "c709f17b-bfc5-4d61-a934-875b7fde83ff",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-review",
+        "options": {}
+      },
+      "id": "29e63e19-ebf2-4610-aac3-410c65ff3cb6",
+      "name": "Listen For Github Comments",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1888,
+        368
+      ],
+      "webhookId": "REPLACE_WITH_UNIQUE_ID",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.github.com/repos/' + $('Edit Fields').item.json.owner + '/' + $('Edit Fields').item.json.repo + '/pulls/' + $('Edit Fields').item.json.prNumber + '/reviews' }}\n",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "id": "171f8b23-bf6c-4308-8850-fb8e4c2414b0",
+      "name": "Post Github PR Comments",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2720,
+        464
+      ],
+      "retryOnFail": false,
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "AppdokjFf6NCol2o",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \n  'https://api.github.com/repos/' \n  + $('Edit Fields').item.json.owner + '/' \n  + $('Edit Fields').item.json.repo \n  + '/issues/' \n  + (\n      $('Listen For Github Comments').item.json.body.pull_request?.number \n      || $('Listen For Github Comments').item.json.body.issue.number\n    )\n  + '/comments' \n}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "id": "8f4b8017-154b-470e-9721-0b349dcf3908",
+      "name": "Post Github PR Comments WIthout Position",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3168,
+        384
+      ],
+      "retryOnFail": false,
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "AppdokjFf6NCol2o",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ \n  'https://api.github.com/repos/' \n  + $json.owner \n  + '/' \n  + $json.repo \n  + '/pulls/' \n  + (\n      $('Listen For Github Comments').item.json.body.pull_request?.number \n      || $('Listen For Github Comments').item.json.body.issue.number\n    ) \n  + '/files' \n}}\n\n\n",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "id": "7a066517-72db-4c66-8bc4-60d721c29710",
+      "name": "Get PR Changes",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -992,
+        608
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "githubApi": {
+          "id": "AppdokjFf6NCol2o",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflowStaticData = $getWorkflowStaticData('global');\nconst executionId = $execution.id;\nconst items = $input.all();\n\n// Assumes you want to use values from the first item\nif (items.length > 0) {\n  const repoName = items[0].json.repository?.name;\n  const owner = items[0].json.repository?.owner?.login;\n  const prNumber = items[0].json.pull_request?.number;\n\n  workflowStaticData[executionId] = {\n    repoName,\n    owner,\n    prNumber\n  };\n}\n\nreturn items;"
+      },
+      "id": "902e239f-119e-439f-9d83-63e71ace8e41",
+      "name": "Set workflow execution information",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1168,
+        176
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "90476c89-1a4e-41b1-8f4f-5a55fb2d78b3",
+              "leftValue": "={{ $json.filename }}",
+              "rightValue": "={{ $('Listen For Github Comments').item.json.body.comment.path }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        672
+      ],
+      "id": "cbbcac6c-f503-42e4-b057-dea1dfa6fd39",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4a5b6a4f-ad24-450a-8a0b-3fc992237513",
+              "leftValue": "={{ $('Listen For Github Comments').item.json.body.comment.path }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        608
+      ],
+      "id": "5199bada-51da-43c3-8730-1e2875bd93af",
+      "name": "is comment inline?"
+    },
+    {
+      "parameters": {
+        "content": "If (File Filter): If the comment was inline, this filters the list of files down to only the specific file the user commented on",
+        "height": 96
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        624
+      ],
+      "id": "a0ec8fa2-daa5-49fd-88d5-fd5ad49bc416",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": " Skips any items that don't contain a valid code diff to review.",
+        "height": 80,
+        "width": 208
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        896,
+        576
+      ],
+      "id": "4d347769-4696-4255-a438-1587bdf300e3",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Calculates the exact line number of a change to know where to post the reply.",
+        "height": 80,
+        "width": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        576
+      ],
+      "id": "216df7d7-6208-4271-8964-5972122dd3f6",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Separates the code diff into 'Original code' and 'New code' blocks for the AI to easily compare.",
+        "height": 80
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        576
+      ],
+      "id": "46bb77aa-884a-4e8d-804f-b229c95f440d",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Skip File Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Process Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Diff": {
+      "main": [
+        [
+          {
+            "node": "Prepare Code Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Need Review": {
+      "main": [
+        [
+          {
+            "node": "Set workflow execution information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Static Context Including Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get JIRA issue": {
+      "main": [
+        [
+          {
+            "node": "Format JIRA Context",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If JIRA Subtask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge LLM Output with Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If JIRA Subtask": {
+      "main": [
+        [
+          {
+            "node": "Get JIRA Parent Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Request": {
+      "main": [
+        [
+          {
+            "node": "Post Github PR Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Comments": {
+      "main": [
+        [
+          {
+            "node": "Any Issues Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Issues Found?": {
+      "main": [
+        [
+          {
+            "node": "Get Static Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip File Changes": {
+      "main": [
+        [
+          {
+            "node": "Parse Diff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Static Context": {
+      "main": [
+        [
+          {
+            "node": "Post No Issues Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Comments": {
+      "main": [
+        [
+          {
+            "node": "Prepare Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format JIRA Context": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Post Error Occurred": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Static Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post No Issues Found": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Static Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Code Changes": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Irrelevant Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Irrelevant Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge LLM Output with Input",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract the JIRA Issue ID": {
+      "main": [
+        [
+          {
+            "node": "Get JIRA issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format JIRA Parent Context": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge LLM Output with Input": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Request Without Position": {
+      "main": [
+        [
+          {
+            "node": "Post Github PR Comments WIthout Position",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Static Context Including Error": {
+      "main": [
+        [
+          {
+            "node": "Post Error Occurred",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get JIRA Parent Issue": {
+      "main": [
+        [
+          {
+            "node": "Format JIRA Parent Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get PR Changes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Need Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listen For Github Comments": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Github PR Comments": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Static Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Request Without Position",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Github PR Comments WIthout Position": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Static Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PR Changes": {
+      "main": [
+        [
+          {
+            "node": "is comment inline?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set workflow execution information": {
+      "main": [
+        [
+          {
+            "node": "Post Review Started",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract the JIRA Issue ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get PR Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is comment inline?": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "71e3ebe5-7bc2-4573-af2d-925ad03e8cc6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c4d3d9554f559f37c4aec450d6f8f68d01d90795a293fde7c0b00b4a910e64a4"
+  },
+  "id": "MJlisW32zHLRgiuf",
+  "tags": []
+}
