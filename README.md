@@ -2,7 +2,8 @@
 
 > Automated code review system using AI (Google Gemini) that posts intelligent inline comments on GitHub Pull Requests
 
-![Workflow Overview](images/workflow-overview.png)
+![Workflow Overview](<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/f3bbed3a-5327-4296-bbde-6a62fff006cd" />)
+
 
 ---
 
@@ -19,9 +20,6 @@
 | **Avg Duration** | 43 seconds |
 | **Success Rate** | 100% |
 
-*Data collected from November 11-19, 2025*
-
-![Metrics Dashboard](images/metrics-dashboard.png)
 
 ---
 
@@ -152,13 +150,12 @@ This project uses **n8n** (workflow automation platform) because:
 - **Google Gemini API** - AI code analysis
 - **Google Sheets API** - Metrics logging and tracking
 - **Webhooks** - Real-time PR event triggers with signature verification
-
 ### Cost Analysis (Real Data)
 
 Based on 14 actual reviews:
 
 | Metric | Value | Note |
-|--------|-------|------|
+| :--- | :--- | :--- |
 | **Total Cost** | $0.0024 | Across all 14 reviews |
 | **Cost per PR** | $0.00017 | Less than 2/100th of a cent! |
 | **Cost per File** | $0.00017 | Same (1 file per PR in test data) |
@@ -167,7 +164,7 @@ Based on 14 actual reviews:
 **Cost Comparison:**
 
 | Approach | Cost per PR | Notes |
-|----------|-------------|-------|
+| :--- | :--- | :--- |
 | **Manual Review** | $15-30 | 30-60 min @ $30/hour |
 | **GPT-4** | $0.05-0.15 | 5-10x more expensive |
 | **Claude Sonnet** | $0.08-0.12 | 3-7x more expensive |
