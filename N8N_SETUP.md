@@ -208,12 +208,6 @@ https://yourname.app.n8n.cloud/webhook/github-review
 #### **Content type**
 - Select: `application/json`
 
-#### **Secret**
-- Generate a random secret (32+ characters)
-- Example: `Xy9$mK2!pL8@vN4#wQ6&zR3*hT7%jF5^`
-- **Save this secret** - you'll need it if you add signature verification later
-- **For now, you can leave it blank** (workflow will work without signature verification)
-
 #### **SSL verification**
 - Keep: ✅ **Enable SSL verification** (default)
 
