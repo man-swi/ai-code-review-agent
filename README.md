@@ -2,7 +2,7 @@
 
 > Automated code review system using AI (Google Gemini) that posts intelligent inline comments on GitHub Pull Requests
 
-![Workflow Overview](https://github.com/user-attachments/assets/f3bbed3a-5327-4296-bbde-6a62fff006cd)
+![Workflow Overview](https://github.com/user-attachments/assets/5f3eb699-1146-457b-9489-c5ee7a69a6e6)
 
 
 ---
@@ -455,7 +455,7 @@ Simply repeat Step 4 for each repository! The same webhook URL works for all rep
 
 A developer comments on their PR:
 
-![Comment Trigger](images/trigger-comment.png)
+![Comment Trigger](https://github.com/user-attachments/assets/8d769f6b-a5ec-4afc-8fc5-028ad7924d86)
 
 Comment: `coro-bot-review`
 
@@ -463,13 +463,12 @@ Comment: `coro-bot-review`
 
 The n8n workflow executes automatically (43 seconds average):
 
-![Workflow Running](images/workflow-execution.png)
+![Workflow Running](https://github.com/user-attachments/assets/94f91bfe-3277-499f-bcc6-44562f78f7e7)
 
 ### 3. AI Review Result
 
 The bot posts review findings:
 
-```markdown
 🤖 **AI Review:**
 
 **Potential Issue - Error Handling**
@@ -485,7 +484,7 @@ if (!user) {
 
 **Severity:** Medium  
 **Category:** Logic Bug
-```
+
 
 ### 4. Metrics Logged
 
@@ -516,20 +515,7 @@ Every review is automatically tracked:
 ```
 "Review this code and find issues"
 ```
-Result: Generic, unhelpful feedback about variable naming.
-
-**After optimization:**
-```
-You are a senior code reviewer. Focus ONLY on:
-1. Logic bugs that could cause runtime errors
-2. Security vulnerabilities (SQL injection, XSS, etc.)
-3. Performance issues (O(n²) loops, memory leaks)
-
-Context: {{ JIRA_TICKET_DESCRIPTION }}
-
-If you find ZERO issues, respond with: "ALL_CLEAR"
-```
-Result: Focused, actionable feedback on real problems.
+Result: Generic, unhelpful feedback about variable naming, Focused, actionable feedback on real problems..
 
 **Impact:** 40% improvement in review relevance
 
@@ -550,28 +536,6 @@ With JIRA context:
 - 50% of non-JIRA reviews needed clarification
 
 **Lesson:** Business context makes AI reviews 40% more relevant.
-
----
-
-**4. Pragmatism Over Perfectionism**
-
-**Initial Plan:**
-- Build custom Python service
-- LangChain + FastAPI + Docker + Kubernetes
-- Time estimate: 2-3 weeks
-
-**What I Did:**
-- Used n8n workflow automation
-- Time taken: 2 days to MVP
-- Time to production: 3 days with metrics
-
-**Result:** 
-- Shipped a working product
-- Validated the idea with real users
-- Collected 14 data points in 1 week
-- Can rebuild in Python later if needed
-
-**Lesson:** Choose tools based on goals, not resume keywords. Time-to-market matters.
 
 ---
 
