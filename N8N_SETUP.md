@@ -490,34 +490,6 @@ Does this code handle null values properly?
 
 This prevents unauthorized webhook triggers.
 
-### Add verification code:
-
-1. **In n8n workflow, add a Code node** after `Listen For Github Comments`
-2. **Paste this code:**
-```javascript
-const crypto = require('crypto');
-
-const secret = 'YOUR_WEBHOOK_SECRET'; // Replace with your secret
-const signature = $input.item.json.headers['x-hub-signature-256'];
-const payload = JSON.stringify($input.item.json.body);
-
-const expected = 'sha256=' + crypto
-  .createHmac('sha256', secret)
-  .update(payload)
-  .digest('hex');
-
-if (signature !== expected) {
-  throw new Error('Invalid signature');
-}
-
-return $input.all();
-```
-
-3. **Replace `YOUR_WEBHOOK_SECRET`** with the secret you set in GitHub
-4. **Save workflow**
-
-Now only requests from GitHub will be processed!
-
 ---
 
 ## 🤝 Need Help?
