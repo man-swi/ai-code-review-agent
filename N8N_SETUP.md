@@ -518,29 +518,3 @@ This prevents unauthorized webhook triggers.
 
 **Questions?** kamblemanswi8@gmail.com
 
-**Last Updated:** November 19, 2025
-
-NOW UPDATE YOUR README
-Add this to your README.md in the "Getting Started" section:
-markdown## 🚀 Quick Start
-
-**Choose your guide:**
-
-- 🎯 **Just want to use it in n8n?** → [n8n Quick Setup Guide](N8N_SETUP.md) (15 minutes)
-- 📘 **Need complete setup instructions?** → [Complete Setup Guide](SETUP_GUIDE.md) (45 minutes)
-- 💻 **Want to understand the code?** → Read the sections below
-
-### Super Quick Version (5 minutes)
-
-1. **Import workflow** to n8n → [Download workflow.json](n8n-workflow/workflow.json)
-2. **Add credentials** in n8n (GitHub token, Gemini API key, Google Sheets)
-3. **Copy webhook URL** from n8n workflow
-4. **Add webhook** to GitHub repo settings
-5. **Comment** `coro-bot-review` on any PR
-
-**Detailed instructions:** [N8N_SETUP.md](N8N_SETUP.md)
-
-COMMIT EVERYTHING
-bashgit add N8N_SETUP.md README.md
-git commit -m "Add quick n8n setup guide with webhook configuration"
-git push origin main
