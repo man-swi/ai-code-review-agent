@@ -469,7 +469,6 @@ The n8n workflow executes automatically (43 seconds average):
 
 The bot posts review findings:
 
-```markdown
 🤖 **AI Review:**
 
 **Potential Issue - Error Handling**
@@ -485,7 +484,7 @@ if (!user) {
 
 **Severity:** Medium  
 **Category:** Logic Bug
-```
+
 
 ### 4. Metrics Logged
 
@@ -516,20 +515,7 @@ Every review is automatically tracked:
 ```
 "Review this code and find issues"
 ```
-Result: Generic, unhelpful feedback about variable naming.
-
-**After optimization:**
-```
-You are a senior code reviewer. Focus ONLY on:
-1. Logic bugs that could cause runtime errors
-2. Security vulnerabilities (SQL injection, XSS, etc.)
-3. Performance issues (O(n²) loops, memory leaks)
-
-Context: {{ JIRA_TICKET_DESCRIPTION }}
-
-If you find ZERO issues, respond with: "ALL_CLEAR"
-```
-Result: Focused, actionable feedback on real problems.
+Result: Generic, unhelpful feedback about variable naming, Focused, actionable feedback on real problems..
 
 **Impact:** 40% improvement in review relevance
 
@@ -550,28 +536,6 @@ With JIRA context:
 - 50% of non-JIRA reviews needed clarification
 
 **Lesson:** Business context makes AI reviews 40% more relevant.
-
----
-
-**4. Pragmatism Over Perfectionism**
-
-**Initial Plan:**
-- Build custom Python service
-- LangChain + FastAPI + Docker + Kubernetes
-- Time estimate: 2-3 weeks
-
-**What I Did:**
-- Used n8n workflow automation
-- Time taken: 2 days to MVP
-- Time to production: 3 days with metrics
-
-**Result:** 
-- Shipped a working product
-- Validated the idea with real users
-- Collected 14 data points in 1 week
-- Can rebuild in Python later if needed
-
-**Lesson:** Choose tools based on goals, not resume keywords. Time-to-market matters.
 
 ---
 
