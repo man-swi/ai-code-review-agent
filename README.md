@@ -2,7 +2,7 @@
 
 > Automated code review system using AI (Google Gemini) that posts intelligent inline comments on GitHub Pull Requests
 
-![Workflow Overview](<img width="1366" height="768" alt="Image" src="https://github.com/user-attachments/assets/f3bbed3a-5327-4296-bbde-6a62fff006cd" />)
+![Workflow Overview](https://github.com/user-attachments/assets/f3bbed3a-5327-4296-bbde-6a62fff006cd)
 
 
 ---
