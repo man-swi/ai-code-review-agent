@@ -484,14 +484,6 @@ Does this code handle null values properly?
 
 ---
 
-## 🛠️ Advanced: Signature Verification (Optional)
-
-**For extra security, verify webhook signatures:**
-
-This prevents unauthorized webhook triggers.
-
----
-
 ## 🤝 Need Help?
 
 **If something doesn't work:**
