@@ -455,7 +455,7 @@ Simply repeat Step 4 for each repository! The same webhook URL works for all rep
 
 A developer comments on their PR:
 
-![Comment Trigger](images/trigger-comment.png)
+![Comment Trigger](https://github.com/user-attachments/assets/8d769f6b-a5ec-4afc-8fc5-028ad7924d86)
 
 Comment: `coro-bot-review`
 
@@ -463,7 +463,7 @@ Comment: `coro-bot-review`
 
 The n8n workflow executes automatically (43 seconds average):
 
-![Workflow Running](images/workflow-execution.png)
+![Workflow Running](https://github.com/user-attachments/assets/94f91bfe-3277-499f-bcc6-44562f78f7e7)
 
 ### 3. AI Review Result
 
