@@ -39,7 +39,7 @@
       "name": "Need Review",
       "type": "n8n-nodes-base.if",
       "position": [
-        -1568,
+        -1152,
         192
       ],
       "typeVersion": 2.2
@@ -90,7 +90,7 @@
       "name": "Skip File Changes",
       "type": "n8n-nodes-base.if",
       "position": [
-        352,
+        560,
         432
       ],
       "typeVersion": 2.2
@@ -111,7 +111,7 @@
       "name": "Basic LLM Chain",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "position": [
-        1024,
+        1232,
         112
       ],
       "typeVersion": 1.5
@@ -128,7 +128,7 @@
       "name": "Google Gemini Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "position": [
-        1104,
+        1312,
         336
       ],
       "typeVersion": 1,
@@ -147,7 +147,7 @@
       "name": "Extract the JIRA Issue ID",
       "type": "n8n-nodes-base.code",
       "position": [
-        -992,
+        -784,
         288
       ],
       "typeVersion": 2
@@ -162,7 +162,7 @@
       "name": "Get JIRA issue",
       "type": "n8n-nodes-base.jira",
       "position": [
-        -768,
+        -560,
         288
       ],
       "typeVersion": 1,
@@ -191,7 +191,7 @@
       "name": "Format JIRA Context",
       "type": "n8n-nodes-base.set",
       "position": [
-        -96,
+        112,
         384
       ],
       "typeVersion": 3.4
@@ -225,7 +225,7 @@
       "name": "If JIRA Subtask",
       "type": "n8n-nodes-base.if",
       "position": [
-        -544,
+        -336,
         192
       ],
       "typeVersion": 2.2
@@ -248,7 +248,7 @@
       "name": "Format JIRA Parent Context",
       "type": "n8n-nodes-base.set",
       "position": [
-        -96,
+        112,
         192
       ],
       "typeVersion": 3.4
@@ -266,7 +266,7 @@
       "name": "Merge",
       "type": "n8n-nodes-base.merge",
       "position": [
-        128,
+        336,
         400
       ],
       "typeVersion": 3.2
@@ -280,7 +280,7 @@
       "name": "Prepare Code Changes",
       "type": "n8n-nodes-base.code",
       "position": [
-        800,
+        1008,
         432
       ],
       "typeVersion": 2
@@ -308,7 +308,7 @@
       "name": "Aggregate",
       "type": "n8n-nodes-base.aggregate",
       "position": [
-        1600,
+        2016,
         432
       ],
       "typeVersion": 1
@@ -323,7 +323,7 @@
       "name": "Merge LLM Output with Input",
       "type": "n8n-nodes-base.merge",
       "position": [
-        1376,
+        1792,
         432
       ],
       "typeVersion": 3.2
@@ -388,7 +388,7 @@
       "name": "Filter Irrelevant Fields",
       "type": "n8n-nodes-base.set",
       "position": [
-        1088,
+        1296,
         512
       ],
       "typeVersion": 3.4
@@ -422,7 +422,7 @@
       "name": "Any Issues Found?",
       "type": "n8n-nodes-base.if",
       "position": [
-        2048,
+        2464,
         432
       ],
       "typeVersion": 2.2
@@ -440,7 +440,7 @@
       "name": "Split Out Comments",
       "type": "n8n-nodes-base.splitOut",
       "position": [
-        2272,
+        2688,
         464
       ],
       "typeVersion": 1
@@ -453,7 +453,7 @@
       "name": "Prepare Request",
       "type": "n8n-nodes-base.code",
       "position": [
-        2496,
+        2912,
         464
       ],
       "typeVersion": 2
@@ -466,7 +466,7 @@
       "name": "Prepare Request Without Position",
       "type": "n8n-nodes-base.code",
       "position": [
-        2944,
+        3360,
         384
       ],
       "typeVersion": 2
@@ -492,7 +492,7 @@
       "name": "Post Review Started",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        -992,
+        -784,
         96
       ],
       "typeVersion": 4.2,
@@ -506,13 +506,13 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// This function is designed to parse a git diff/patch\n// and find the line number of the last change.\nconst parseLastDiff = (gitDiff) => {\n  // Clean up the diff string\n  gitDiff = gitDiff.replace(/\\n\\\\ No newline at end of file/, '');\n  \n  const diffList = gitDiff.trimEnd().split('\\n').reverse();\n  const lastLineFirstChar = diffList?.[0]?.[0];\n  \n  // Find the last @@ line in the diff\n  const lastDiff = diffList.find((item) => {\n      return /^@@ \\-\\d+(,\\d+)? \\+\\d+(,\\d+)? @@/g.test(item);\n    }) || '';\n\n  // Extract the line counts from the @@ line\n  const match = lastDiff.match(/^@@ \\-\\d+(?:,(\\d+))? \\+(\\d+)(?:,(\\d+))? @@/);\n  if (!match) {\n    return { lastOldLine: -1, lastNewLine: -1, gitDiff };\n  }\n  \n  const oldLineStart = parseInt(match[1] || '1', 10);\n  const newLineStart = parseInt(match[2] || '1', 10);\n  const newLineCount = parseInt(match[3] || '1', 10);\n\n  const lastOldLine = oldLineStart -1 + (parseInt(match[1] || '1', 10));\n  const lastNewLine = newLineStart -1 + newLineCount;\n\n  return {\n    lastOldLine: lastLineFirstChar === '+' ? null : lastOldLine,\n    lastNewLine: lastLineFirstChar === '-' ? null : lastNewLine,\n    gitDiff: gitDiff, // Pass the cleaned gitDiff through\n  };\n};\n\n// --- Main execution ---\nconst item = $input.item.json;\n\n// GitHub provides the diff in the 'patch' field.\n// Only run if the patch field exists.\nif (item.patch) {\n  const extra = parseLastDiff(item.patch);\n  return { ...item, ...extra };\n} else {\n  // If there's no patch, return default values to avoid errors.\n  return { \n    ...item, \n    lastOldLine: -1, \n    lastNewLine: -1, \n    gitDiff: '' \n  };\n}"
+        "jsCode": "// This function is designed to parse a git diff/patch\nconst parseLastDiff = (gitDiff) => {\n  // Clean up the diff string\n  gitDiff = gitDiff.replace(/\\n\\\\ No newline at end of file/, '');\n  \n  const diffList = gitDiff.trimEnd().split('\\n').reverse();\n  const lastLineFirstChar = diffList?.[0]?.[0];\n  \n  // Find the last @@ line in the diff\n  const lastDiff = diffList.find((item) => {\n      return /^@@ \\-\\d+(,\\d+)? \\+\\d+(,\\d+)? @@/g.test(item);\n    }) || '';\n\n  // Extract the line counts from the @@ line\n  const match = lastDiff.match(/^@@ \\-\\d+(?:,(\\d+))? \\+(\\d+)(?:,(\\d+))? @@/);\n  if (!match) {\n    return { lastOldLine: -1, lastNewLine: -1, gitDiff };\n  }\n  \n  const oldLineStart = parseInt(match[1] || '1', 10);\n  const newLineStart = parseInt(match[2] || '1', 10);\n  const newLineCount = parseInt(match[3] || '1', 10);\n\n  const lastOldLine = oldLineStart -1 + (parseInt(match[1] || '1', 10));\n  const lastNewLine = newLineStart -1 + newLineCount;\n\n  return {\n    lastOldLine: lastLineFirstChar === '+' ? null : lastOldLine,\n    lastNewLine: lastLineFirstChar === '-' ? null : lastNewLine,\n    gitDiff: gitDiff, // Pass the cleaned gitDiff through\n  };\n};\n\n// --- Main execution ---\nconst item = $input.item.json;\n\n// GitHub provides the diff in the 'patch' field.\n// Only run if the patch field exists.\nif (item.patch) {\n  const extra = parseLastDiff(item.patch);\n  return { ...item, ...extra };\n} else {\n  // If there's no patch, return default values to avoid errors.\n  return { \n    ...item, \n    lastOldLine: -1, \n    lastNewLine: -1, \n    gitDiff: '' \n  };\n}"
       },
       "id": "b19bfcb5-374f-4d0e-951b-218b2e7846a5",
       "name": "Parse Diff",
       "type": "n8n-nodes-base.code",
       "position": [
-        576,
+        784,
         432
       ],
       "typeVersion": 2
@@ -544,7 +544,7 @@
       "name": "Post No Issues Found",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        3168,
+        3584,
         192
       ],
       "typeVersion": 4.2,
@@ -608,7 +608,7 @@
       "name": "Get Static Context",
       "type": "n8n-nodes-base.code",
       "position": [
-        2944,
+        3360,
         192
       ],
       "typeVersion": 2
@@ -621,8 +621,8 @@
       "name": "Cleanup Static Context",
       "type": "n8n-nodes-base.code",
       "position": [
-        3392,
-        528
+        4064,
+        640
       ],
       "typeVersion": 2
     },
@@ -634,7 +634,7 @@
       "name": "Process Comments",
       "type": "n8n-nodes-base.code",
       "position": [
-        1824,
+        2240,
         432
       ],
       "typeVersion": 2
@@ -650,87 +650,8 @@
       "name": "Try It Out!",
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -3024,
-        64
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
-        "content": "### 🟢 Step 1: Listen & Capture\n\nA Webhook node listens for merge request note events. When the comment text matches your trigger (default: `ai-review`), it:\n\n- Extracts the Project & MR IDs and stores them in a **Static Context** (see below) so later nodes always know where to post results.\n- Posts a short \"AI review started\" message back to the MR to let reviewers know the bot is working.",
-        "height": 232,
-        "width": 600,
-        "color": 2
-      },
-      "id": "658663b5-9404-4801-ac78-9496b1a89b20",
-      "name": "Step 1: Listen & Capture",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -2240,
-        480
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
-        "content": "### 🟣 Step 2: Prepare & Review\n\nThe workflow fetches the merge request changes via the GitLab API and parses the diff into original vs new code blocks.\n\nIf the MR description contains a Jira key, the workflow fetches the issue summary and, if it's a subtask, also fetches the parent ticket for extra context. Both summaries are combined into the prompt.\n\nAn LLM (Gemini by default) is prompted to find critical issues only—logic bugs, security flaws and performance problems—and to return comments with file and line numbers. If no issues exist, the model returns `ALL_CLEAR`.",
-        "height": 280,
-        "width": 600,
-        "color": 4
-      },
-      "id": "427e509d-d1fe-4111-a90e-d6add6eedcc9",
-      "name": "Step 2: Prepare & Review",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -192,
-        -48
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
-        "content": "### 🟠 Step 3: Post & Fallback\n\nReview comments are converted into GitLab discussion payloads and posted back to the MR at the correct file and line positions.\n\nIf a comment’s position is not calculated properly, the workflow falls back to posting a comment as a thread at the MR level so nothing is lost.",
-        "height": 184,
-        "width": 600,
-        "color": 5
-      },
-      "id": "c13d76fa-29a5-4e42-9cd8-f8fe3a61ba43",
-      "name": "Step 3: Post & Fallback",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        3616,
-        -32
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
-        "content": "### 🔵 Static Context & Error Handling\n\nWorkflow Static Data is used to store persistent values—like the project ID and the MR ID so that they will be available across branches.\n\nThis is critical for the Error Trigger: if something fails, the error path can still post to the correct MR using these stored IDs. Without static context, error comments wouldn’t know where to go.",
-        "height": 216,
-        "width": 600
-      },
-      "id": "0040cc97-eef4-40bc-9ae4-2655ee3f8332",
-      "name": "Static Context & Error Handling",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        2144,
-        912
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
-        "content": "### 🟡 Need Help & Customise\n\n- Change the trigger word in the **IF** node to match your own.\n- Swap in your preferred LLM or adjust the prompt to suit your guidelines.\n- Filter by file type or exclude certain directories in the parsing logic.",
-        "height": 184,
-        "width": 552,
-        "color": 7
-      },
-      "id": "b8db0dc2-fbd9-4e1b-9d9c-829eee796c52",
-      "name": "Need Help & Customise",
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        784,
-        736
+        176,
+        16
       ],
       "typeVersion": 1
     },
@@ -744,7 +665,7 @@
       "name": "Get JIRA Parent Issue",
       "type": "n8n-nodes-base.jira",
       "position": [
-        -320,
+        -112,
         192
       ],
       "typeVersion": 1,
@@ -839,7 +760,7 @@
       "name": "Post Github PR Comments",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        2720,
+        3136,
         464
       ],
       "retryOnFail": false,
@@ -873,7 +794,7 @@
       "name": "Post Github PR Comments WIthout Position",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        3168,
+        3584,
         384
       ],
       "retryOnFail": false,
@@ -896,7 +817,7 @@
       "name": "Get PR Changes",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        -992,
+        -784,
         608
       ],
       "typeVersion": 4.2,
@@ -915,7 +836,7 @@
       "name": "Set workflow execution information",
       "type": "n8n-nodes-base.code",
       "position": [
-        -1168,
+        -960,
         176
       ],
       "typeVersion": 2
@@ -948,7 +869,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -96,
+        112,
         672
       ],
       "id": "cbbcac6c-f503-42e4-b057-dea1dfa6fd39",
@@ -982,7 +903,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -320,
+        -112,
         608
       ],
       "id": "5199bada-51da-43c3-8730-1e2875bd93af",
@@ -1004,47 +925,173 @@
     },
     {
       "parameters": {
-        "content": " Skips any items that don't contain a valid code diff to review.",
-        "height": 80,
-        "width": 208
+        "jsCode": "// Loop over all items (usually just one)\nconst items = $input.all();\n\nfor (const item of items) {\n  // Create a timestamp for right now\n  item.json.startTime = Date.now();\n}\n\nreturn items;"
       },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        896,
-        576
+        -1456,
+        368
       ],
-      "id": "4d347769-4696-4255-a438-1587bdf300e3",
-      "name": "Sticky Note1"
+      "id": "beefbeff-387c-4a6b-912e-2d094028768b",
+      "name": "Record Start Time"
     },
     {
       "parameters": {
-        "content": "Calculates the exact line number of a change to know where to post the reply.",
-        "height": 80,
-        "width": 224
+        "jsCode": "const items = $input.all();\n\nfor (const item of items) {\n  // 1. Get the text involved\n  const prompt = item.json.prompt || ''; // The question sent\n  const response = item.json.text || '';   // The AI answer\n\n  // 2. Estimate Tokens (Rule of thumb: 4 chars = 1 token)\n  const promptTokens = Math.ceil(prompt.length / 4);\n  const responseTokens = Math.ceil(response.length / 4);\n  const totalTokens = promptTokens + responseTokens;\n\n  // 3. Estimate Cost (Gemini Flash pricing: ~$0.10 per million tokens)\n  // Input: $0.075/1M | Output: $0.30/1M\n  const inputCost = (promptTokens / 1000000) * 0.075;\n  const outputCost = (responseTokens / 1000000) * 0.30;\n  const totalCost = inputCost + outputCost;\n\n  // 4. Save to the item\n  item.json.tokens = totalTokens;\n  item.json.cost = totalCost.toFixed(6); // Keep 6 decimals (e.g. 0.000450)\n}\n\nreturn items;"
       },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        1152,
-        576
+        1584,
+        128
       ],
-      "id": "216df7d7-6208-4271-8964-5972122dd3f6",
-      "name": "Sticky Note2"
+      "id": "e416caa1-5569-4d36-9a4c-59ca1622eef1",
+      "name": "Calculate Tokens"
     },
     {
       "parameters": {
-        "content": "Separates the code diff into 'Original code' and 'New code' blocks for the AI to easily compare.",
-        "height": 80
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1QcvafcnczeMV84Pqd-e8mwxJh8wEL-6I0EzeRE_YacM",
+          "mode": "list",
+          "cachedResultName": "AI Code Review Metrics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QcvafcnczeMV84Pqd-e8mwxJh8wEL-6I0EzeRE_YacM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QcvafcnczeMV84Pqd-e8mwxJh8wEL-6I0EzeRE_YacM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "Owner": "={{ $('Edit Fields').item.json.owner }}",
+            "Repo": "={{ $('Edit Fields').item.json.repo }}",
+            "PR Number": "={{ $('Edit Fields').item.json.prNumber }}",
+            "Files Reviewed": "=={{ $('Aggregate').item.json.data.length }}",
+            "Issues Found": "={{ $('Process Comments').item.json.commentsToPost ? $('Process Comments').item.json.commentsToPost.length : 0 }}",
+            "Tokens Used": "={{ $('Calculate Tokens').item ? $('Calculate Tokens').item.json.tokens : 0 }}",
+            "Cost USD": "={{ $('Calculate Tokens').item ? $('Calculate Tokens').item.json.cost : 0 }}",
+            "Duration (seconds)": "={{ Math.round((Date.now() - $('Record Start Time').item.json.startTime) / 1000) }}",
+            "Status": "=success"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Owner",
+              "displayName": "Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Repo",
+              "displayName": "Repo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PR Number",
+              "displayName": "PR Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Files Reviewed",
+              "displayName": "Files Reviewed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Issues Found",
+              "displayName": "Issues Found",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tokens Used",
+              "displayName": "Tokens Used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cost USD",
+              "displayName": "Cost USD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duration (seconds)",
+              "displayName": "Duration (seconds)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
       },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
       "position": [
-        1424,
+        3488,
         576
       ],
-      "id": "46bb77aa-884a-4e8d-804f-b229c95f440d",
-      "name": "Sticky Note3"
+      "id": "b48a54e2-aeae-4754-a876-ff642f260f2a",
+      "name": "Log Metrics to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xtfwzXNbVJbbAebF",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -1124,7 +1171,7 @@
       "main": [
         [
           {
-            "node": "Merge LLM Output with Input",
+            "node": "Calculate Tokens",
             "type": "main",
             "index": 0
           }
@@ -1356,12 +1403,7 @@
       "main": [
         [
           {
-            "node": "Get PR Changes",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Need Review",
+            "node": "Record Start Time",
             "type": "main",
             "index": 0
           }
@@ -1383,7 +1425,7 @@
       "main": [
         [
           {
-            "node": "Cleanup Static Context",
+            "node": "Log Metrics to Sheet",
             "type": "main",
             "index": 0
           }
@@ -1468,13 +1510,56 @@
           }
         ]
       ]
+    },
+    "Cleanup Static Context": {
+      "main": [
+        []
+      ]
+    },
+    "Record Start Time": {
+      "main": [
+        [
+          {
+            "node": "Need Review",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get PR Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Tokens": {
+      "main": [
+        [
+          {
+            "node": "Merge LLM Output with Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Metrics to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Static Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "71e3ebe5-7bc2-4573-af2d-925ad03e8cc6",
+  "versionId": "dab71209-4f3a-49f4-b0a0-80876f33e2d3",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "c4d3d9554f559f37c4aec450d6f8f68d01d90795a293fde7c0b00b4a910e64a4"
